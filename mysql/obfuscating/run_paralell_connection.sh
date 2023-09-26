@@ -98,3 +98,25 @@ done
 
 wait
 echo "stop obfuscated_object_reference" >> ${OUTFILE}
+
+exit 0
+######################################autoincrement example
+#object_reference got an field id outoincrement
+OBJ_MAX_ID=`echo 'select max(id) from object_reference;'|mysql --defaults-file=${MYCNF} -s 2>&1 `
+if [ $? -ne 0 ];then
+        echo "error...."
+        exit 2
+fi
+let "OBJ_MAX_ID=${OBJ_MAX_ID} + 1"
+start=1
+MYCHUNK=10000
+
+while [ ${start} -lt ${OBJ_MAX_ID} ];do
+	let end=${start}+${MYCHUNK}
+        echo "von $start bis $end"
+        echo "call myfunction(${start},${end});"|mysql --defaults-file=${MYCNF} 2>&1 >> ${OUTFILE} &
+	wait_until_below_sql_statements
+        let start=${end}+1 	
+done
+
+wait
